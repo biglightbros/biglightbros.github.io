@@ -1,22 +1,904 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>내 첫 웹페이지</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 40px; line-height: 1.6; }
-    .wrap { max-width: 720px; }
-    h1 { margin-bottom: .2rem; }
-    small { color:#666; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisitorAI - 스마트 방문객 분석 대시보드</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #1e40af;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 헤더 */
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .data-sources-tag {
+            display: inline-flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .data-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* 메트릭 카드 그리드 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .metric-card.success {
+            border-left-color: var(--success-color);
+        }
+
+        .metric-card.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .metric-card.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+        }
+
+        .metric-value {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .metric-change.positive {
+            color: var(--success-color);
+        }
+
+        .metric-change.negative {
+            color: var(--danger-color);
+        }
+
+        /* 차트 섹션 */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .chart-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* 분석 패널 */
+        .analysis-panel {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .prediction-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        /* 실시간 데이터 테이블 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* 상태 표시기 */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-indicator.high {
+            background-color: #fef2f2;
+            color: var(--danger-color);
+        }
+
+        .status-indicator.medium {
+            background-color: #fffbeb;
+            color: var(--warning-color);
+        }
+
+        .status-indicator.low {
+            background-color: #f0fdf4;
+            color: var(--success-color);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        /* 사이드 패널 */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .info-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .info-card.weather {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+        }
+
+        .info-card.events {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        .weather-item,
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .weather-item:last-child,
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-item {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1rem 0;
+        }
+
+        .event-date {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-impact {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        /* 실시간 업데이트 표시 */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background-color: currentColor;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1024px) {
+            .analysis-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+
+            .dashboard-title {
+                font-size: 2rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .data-sources-tag {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>안녕하세요 👋</h1>
-    <small>GitHub Pages로 만든 진짜 웹페이지</small>
-    <p>이건 <b>index.html</b> 하나로 만든 페이지예요.</p>
-    <p>텍스트를 수정해서 저장하면, 주소에 바로 반영됩니다.</p>
-  </div>
+    <div class="dashboard-container">
+        <!-- 헤더 -->
+        <header class="dashboard-header">
+            <h1 class="dashboard-title">🚀 VisitorAI Dashboard</h1>
+            <p class="dashboard-subtitle">인공지능 기반 실시간 방문객 분석 시스템</p>
+            <div class="data-sources-tag">
+                <span class="data-tag">📱 통신사 데이터</span>
+                <span class="data-tag">💳 KB금융 데이터</span>
+                <span class="data-tag">🎭 행사일정</span>
+                <span class="data-tag">🌤️ 기상정보</span>
+                <span class="live-indicator">
+                    <span class="live-dot"></span>
+                    LIVE
+                </span>
+            </div>
+        </header>
+
+        <!-- 주요 메트릭 -->
+        <section class="metrics-grid">
+            <div class="metric-card success">
+                <div class="metric-header">
+                    <span class="metric-title">현재 유동인구</span>
+                    <span class="metric-icon">👥</span>
+                </div>
+                <div class="metric-value" id="currentPopulation">28,543</div>
+                <div class="metric-change positive">
+                    <span>↗️</span>
+                    <span>+12.5% 전시간 대비</span>
+                </div>
+            </div>
+
+            <div class="metric-card warning">
+                <div class="metric-header">
+                    <span class="metric-title">실시간 카드매출</span>
+                    <span class="metric-icon">💳</span>
+                </div>
+                <div class="metric-value" id="cardSales">₩1.8억</div>
+                <div class="metric-change positive">
+                    <span>📈</span>
+                    <span>+18.3% 전일 동시간 대비</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">AI 예측 정확도</span>
+                    <span class="metric-icon">🎯</span>
+                </div>
+                <div class="metric-value" id="accuracy">95.7%</div>
+                <div class="metric-change positive">
+                    <span>🚀</span>
+                    <span>지속 학습 중</span>
+                </div>
+            </div>
+
+            <div class="metric-card danger">
+                <div class="metric-header">
+                    <span class="metric-title">혼잡도 경고</span>
+                    <span class="metric-icon">⚠️</span>
+                </div>
+                <div class="metric-value" id="congestionLevel">높음</div>
+                <div class="metric-change negative">
+                    <span>🔴</span>
+                    <span>롯데월드 주변</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 차트 섹션 -->
+        <section class="charts-section">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">시간대별 유동인구</h3>
+                        <p class="chart-subtitle">통신사 기지국 데이터 기반</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="hourlyPopulationChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">카드매출 트렌드</h3>
+                        <p class="chart-subtitle">KB금융 POS 데이터</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">연령대별 방문 패턴</h3>
+                        <p class="chart-subtitle">통신사 가입자 정보</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="agePatternChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">날씨-방문객 상관분석</h3>
+                        <p class="chart-subtitle">기상청 실시간 데이터</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="weatherCorrelationChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 분석 패널 -->
+        <section class="analysis-panel">
+            <div class="prediction-section">
+                <h2 class="section-title">🔮 AI 예측 분석</h2>
+                <div class="chart-container">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">실시간 예측 데이터</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>시간대</th>
+                            <th>예측 인구</th>
+                            <th>예상 매출</th>
+                            <th>혼잡도</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predictionTableBody">
+                        <!-- 동적으로 생성됨 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="side-panel">
+                <!-- 날씨 정보 -->
+                <div class="info-card weather">
+                    <h3 class="section-title">🌤️ 실시간 기상정보</h3>
+                    <div class="weather-item">
+                        <span>현재 기온</span>
+                        <span id="currentTemp">24°C</span>
+                    </div>
+                    <div class="weather-item">
+                        <span>습도</span>
+                        <span id="humidity">52%</span>
+                    </div>
+                    <div class="weather-item">
+                        <span>강수확률</span>
+                        <span id="rainChance">15%</span>
+                    </div>
+                    <div class="weather-item">
+                        <span>미세먼지</span>
+                        <span id="fineDust">보통</span>
+                    </div>
+                </div>
+
+                <!-- 행사 일정 -->
+                <div class="info-card events">
+                    <h3 class="section-title">🎭 주요 행사 일정</h3>
+                    <div class="event-item">
+                        <div class="event-date">2025.08.20 - 08.22</div>
+                        <div class="event-title">잠실 한강공원 여름축제</div>
+                        <div class="event-impact">예상 방문객 증가: +35%</div>
+                    </div>
+                    <div class="event-item">
+                        <div class="event-date">2025.08.25</div>
+                        <div class="event-title">롯데타워 콘서트</div>
+                        <div class="event-impact">예상 방문객 증가: +60%</div>
+                    </div>
+                    <div class="event-item">
+                        <div class="event-date">2025.08.28</div>
+                        <div class="event-title">석촌호수 야간축제</div>
+                        <div class="event-impact">예상 방문객 증가: +25%</div>
+                    </div>
+                </div>
+
+                <!-- AI 인사이트 -->
+                <div class="info-card">
+                    <h3 class="section-title">🤖 AI 인사이트</h3>
+                    <div style="space-y: 1rem;">
+                        <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem;">
+                            <strong style="color: var(--primary-color);">🔥 급증 예상</strong><br>
+                            <small style="color: #6b7280;">내일 오후 2-4시, 롯데월드 주변 유동인구 +40% 예상</small>
+                        </div>
+                        <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem;">
+                            <strong style="color: var(--success-color);">💰 매출 피크</strong><br>
+                            <small style="color: #6b7280;">주말 저녁 7-9시, 카드매출 최고치 예상</small>
+                        </div>
+                        <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px;">
+                            <strong style="color: var(--warning-color);">⚠️ 혼잡 주의</strong><br>
+                            <small style="color: #6b7280;">8/22 축제일, 지하철 2호선 혼잡 예상</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 전역 변수
+        let charts = {};
+
+        // 실시간 데이터 업데이트
+        function updateRealTimeMetrics() {
+            // 현재 유동인구 (25000-30000)
+            const population = Math.floor(Math.random() * 5000) + 25000;
+            document.getElementById('currentPopulation').textContent = population.toLocaleString();
+
+            // 카드매출 (1.5-2.5억)
+            const sales = (Math.random() * 1 + 1.5).toFixed(1);
+            document.getElementById('cardSales').textContent = `₩${sales}억`;
+
+            // AI 정확도 (95-97%)
+            const accuracy = (Math.random() * 2 + 95).toFixed(1);
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+
+            // 기온 (20-28도)
+            const temp = Math.floor(Math.random() * 8) + 20;
+            document.getElementById('currentTemp').textContent = `${temp}°C`;
+        }
+
+        // 시간대별 유동인구 차트
+        function createHourlyPopulationChart() {
+            const ctx = document.getElementById('hourlyPopulationChart').getContext('2d');
+            const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
+            const data = [
+                800, 500, 300, 200, 300, 1200, 2000, 2800, 2400, 2000,
+                2200, 2800, 3200, 3000, 2600, 2400, 2200, 3000, 3800, 3400,
+                3000, 2400, 1600, 1000
+            ];
+
+            charts.hourlyPopulation = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: '유동인구',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + '명';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 매출 트렌드 차트
+        function createSalesTrendChart() {
+            const ctx = document.getElementById('salesTrendChart').getContext('2d');
+            const days = ['월', '화', '수', '목', '금', '토', '일'];
+            const salesData = [1.2, 1.1, 1.3, 1.4, 1.8, 2.5, 2.2];
+
+            charts.salesTrend = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: '일별 매출',
+                        data: salesData,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₩' + value + '억';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 연령대별 패턴 차트
+        function createAgePatternChart() {
+            const ctx = document.getElementById('agePatternChart').getContext('2d');
+            const ageGroups = ['10대', '20대', '30대', '40대', '50대', '60대+'];
+            const visitData = [12, 28, 24, 18, 12, 6];
+
+            charts.agePattern = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ageGroups,
+                    datasets: [{
+                        data: visitData,
+                        backgroundColor: [
+                            '#ef4444', '#f59e0b', '#10b981', 
+                            '#3b82f6', '#8b5cf6', '#ec4899'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 날씨 상관분석 차트
+        function createWeatherCorrelationChart() {
+            const ctx = document.getElementById('weatherCorrelationChart').getContext('2d');
+            const temperatures = [15, 18, 22, 25, 28, 32, 35];
+            const visitors = [1200, 1600, 2200, 2800, 3200, 2500, 1800];
+
+            charts.weatherCorrelation = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '온도별 방문객',
+                        data: temperatures.map((temp, i) => ({x: temp, y: visitors[i]})),
+                        backgroundColor: '#3b82f6',
+                        borderColor: '#3b82f6',
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '기온 (°C)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '방문객 수 (명)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 예측 차트
+        function createPredictionChart() {
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+            const hours = Array.from({length: 12}, (_, i) => `${i + 12}:00`);
+            const actualData = [2800, 3000, 2600, 2400, 2200, 3000, 3800, 3400, 3000, 2400, 1600, 1000];
+            const predictedData = [2900, 3200, 2750, 2500, 2300, 3200, 4000, 3600, 3200, 2500, 1700, 1050];
+
+            charts.prediction = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: '실제',
+                        data: actualData,
+                        borderColor: '#6b7280',
+                        backgroundColor: 'rgba(107, 114, 128, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'AI 예측',
+                        data: predictedData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 예측 테이블 업데이트
+        function updatePredictionTable() {
+            const tableBody = document.getElementById('predictionTableBody');
+            const currentHour = new Date().getHours();
+            let html = '';
+
+            for (let i = 0; i < 6; i++) {
+                const hour = (currentHour + i) % 24;
+                const population = Math.floor(Math.random() * 2000) + 2000;
+                const sales = (Math.random() * 0.5 + 0.8).toFixed(1);
+                
+                let congestionLevel, statusClass;
+                if (population > 3000) {
+                    congestionLevel = '높음';
+                    statusClass = 'high';
+                } else if (population > 2000) {
+                    congestionLevel = '보통';
+                    statusClass = 'medium';
+                } else {
+                    congestionLevel = '낮음';
+                    statusClass = 'low';
+                }
+
+                html += `
+                    <tr>
+                        <td>${hour}:00 - ${hour + 1}:00</td>
+                        <td>${population.toLocaleString()}명</td>
+                        <td>₩${sales}억</td>
+                        <td>
+                            <span class="status-indicator ${statusClass}">
+                                <span class="status-dot"></span>
+                                ${congestionLevel}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tableBody.innerHTML = html;
+        }
+
+        // 초기화 함수
+        function initializeDashboard() {
+            // 차트 생성
+            createHourlyPopulationChart();
+            createSalesTrendChart();
+            createAgePatternChart();
+            createWeatherCorrelationChart();
+            createPredictionChart();
+
+            // 테이블 초기화
+            updatePredictionTable();
+
+            // 실시간 업데이트 시작
+            updateRealTimeMetrics();
+            setInterval(updateRealTimeMetrics, 3000); // 3초마다
+            setInterval(updatePredictionTable, 10000); // 10초마다
+
+            console.log('🚀 VisitorAI Dashboard 초기화 완료!');
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
 </body>
 </html>
