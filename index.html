@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>송파구 스마트 시스템 - 인공지능 기반 실시간 빅데이터 분석</title>
+    <title>송파구 스마트AI 기반 빅데이터 분석시스템</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         :root {
@@ -12,6 +12,8 @@
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --purple-color: #8b5cf6;
             --dark-color: #1f2937;
             --light-color: #f8fafc;
             --border-color: #e5e7eb;
@@ -33,7 +35,7 @@
         }
 
         .dashboard-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -61,25 +63,44 @@
             margin-bottom: 1rem;
         }
 
-        .data-sources-tag {
-            display: inline-flex;
-            gap: 0.5rem;
+        .data-sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .data-source-category {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .data-source-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .data-tags {
+            display: flex;
             flex-wrap: wrap;
-            justify-content: center;
+            gap: 0.25rem;
         }
 
         .data-tag {
             background: rgba(255, 255, 255, 0.2);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
             backdrop-filter: blur(10px);
         }
 
         /* 메트릭 카드 그리드 */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -98,17 +119,11 @@
             box-shadow: var(--shadow-lg);
         }
 
-        .metric-card.success {
-            border-left-color: var(--success-color);
-        }
-
-        .metric-card.warning {
-            border-left-color: var(--warning-color);
-        }
-
-        .metric-card.danger {
-            border-left-color: var(--danger-color);
-        }
+        .metric-card.success { border-left-color: var(--success-color); }
+        .metric-card.warning { border-left-color: var(--warning-color); }
+        .metric-card.danger { border-left-color: var(--danger-color); }
+        .metric-card.info { border-left-color: var(--info-color); }
+        .metric-card.purple { border-left-color: var(--purple-color); }
 
         .metric-header {
             display: flex;
@@ -130,7 +145,7 @@
         }
 
         .metric-value {
-            font-size: 2.25rem;
+            font-size: 2rem;
             font-weight: bold;
             color: var(--dark-color);
             margin-bottom: 0.5rem;
@@ -143,12 +158,33 @@
             font-size: 0.875rem;
         }
 
-        .metric-change.positive {
-            color: var(--success-color);
+        .metric-change.positive { color: var(--success-color); }
+        .metric-change.negative { color: var(--danger-color); }
+
+        /* 새로운 섹션들 */
+        .section-container {
+            margin-bottom: 2rem;
         }
 
-        .metric-change.negative {
-            color: var(--danger-color);
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
         }
 
         /* 차트 섹션 */
@@ -169,7 +205,7 @@
         .chart-header {
             display: flex;
             align-items: center;
-            justify-content: between;
+            justify-content: space-between;
             margin-bottom: 1rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--border-color);
@@ -192,53 +228,88 @@
             height: 300px;
         }
 
-        /* 분석 패널 */
-        .analysis-panel {
+        /* 교통/주차 현황 */
+        .traffic-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
         }
 
-        .prediction-section {
+        .traffic-item {
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
             box-shadow: var(--shadow);
         }
 
-        .section-title {
+        .traffic-name {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .traffic-status {
             font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--dark-color);
+            margin-bottom: 0.25rem;
         }
 
-        /* 실시간 데이터 테이블 */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
+        .traffic-detail {
+            font-size: 0.75rem;
+            color: #6b7280;
         }
 
-        .data-table th,
-        .data-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+        /* SNS 트렌드 */
+        .sns-trends {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
         }
 
-        .data-table th {
-            background-color: #f8fafc;
-            font-weight: 600;
-            color: var(--dark-color);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .sns-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
         }
 
-        .data-table tr:hover {
-            background-color: #f8fafc;
+        .sns-platform {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sns-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .youtube { background: #ff0000; }
+        .twitter { background: #1da1f2; }
+
+        .sns-metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .trending-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .keyword-tag {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
         }
 
         /* 상태 표시기 */
@@ -267,71 +338,21 @@
             color: var(--success-color);
         }
 
+        .status-indicator.available {
+            background-color: #f0fdf4;
+            color: var(--success-color);
+        }
+
+        .status-indicator.full {
+            background-color: #fef2f2;
+            color: var(--danger-color);
+        }
+
         .status-dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
             background-color: currentColor;
-        }
-
-        /* 사이드 패널 */
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .info-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-        }
-
-        .info-card.weather {
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
-            color: white;
-        }
-
-        .info-card.events {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: white;
-        }
-
-        .weather-item,
-        .event-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .weather-item:last-child,
-        .event-item:last-child {
-            border-bottom: none;
-        }
-
-        .event-item {
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 1rem 0;
-        }
-
-        .event-date {
-            font-size: 0.75rem;
-            opacity: 0.8;
-            margin-bottom: 0.25rem;
-        }
-
-        .event-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .event-impact {
-            font-size: 0.75rem;
-            opacity: 0.8;
         }
 
         /* 실시간 업데이트 표시 */
@@ -356,17 +377,38 @@
         }
 
         @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 테이블 스타일 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.875rem;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8fafc;
         }
 
         /* 반응형 디자인 */
         @media (max-width: 1024px) {
-            .analysis-panel {
+            .charts-section {
                 grid-template-columns: 1fr;
             }
         }
@@ -384,30 +426,9 @@
                 grid-template-columns: 1fr;
             }
 
-            .charts-section {
+            .data-sources-grid {
                 grid-template-columns: 1fr;
             }
-
-            .data-sources-tag {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        /* 로딩 애니메이션 */
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -416,15 +437,39 @@
         <!-- 헤더 -->
         <header class="dashboard-header">
             <h1 class="dashboard-title">🚀 송파구 스마트AI</h1>
-            <p class="dashboard-subtitle">인공지능 기반 실시간 빅데이터 분석시스템</p>
-            <div class="data-sources-tag">
-                <span class="data-tag">📱 통신사 데이터</span>
-                <span class="data-tag">💳 KB금융 데이터</span>
-                <span class="data-tag">🎭 행사일정</span>
-                <span class="data-tag">🌤️ 기상정보</span>
+            <p class="dashboard-subtitle">민간·공공·SNS 빅데이터 기반 실시간 AI분석 시스템</p>
+            
+            <div class="data-sources-grid">
+                <div class="data-source-category">
+                    <div class="data-source-title">📱 민간 데이터</div>
+                    <div class="data-tags">
+                        <span class="data-tag">SKT 통신</span>
+                        <span class="data-tag">KB금융</span>
+                    </div>
+                </div>
+                <div class="data-source-category">
+                    <div class="data-source-title">🏛️ 공공 데이터</div>
+                    <div class="data-tags">
+                        <span class="data-tag">행사일정</span>
+                        <span class="data-tag">주차교통</span>
+                        <span class="data-tag">충전소</span>
+                        <span class="data-tag">기상정보</span>
+                    </div>
+                </div>
+                <div class="data-source-category">
+                    <div class="data-source-title">💬 SNS 데이터</div>
+                    <div class="data-tags">
+                        <span class="data-tag">인스타그램</span>
+                        <span class="data-tag">유튜브</span>
+                        <span class="data-tag">트위터X</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1rem;">
                 <span class="live-indicator">
                     <span class="live-dot"></span>
-                    LIVE
+                    실시간 업데이트
                 </span>
             </div>
         </header>
@@ -455,38 +500,171 @@
                 </div>
             </div>
 
+            <div class="metric-card info">
+                <div class="metric-header">
+                    <span class="metric-title">주차장 가용률</span>
+                    <span class="metric-icon">🅿️</span>
+                </div>
+                <div class="metric-value" id="parkingRate">67%</div>
+                <div class="metric-change positive">
+                    <span>🟢</span>
+                    <span>충분함</span>
+                </div>
+            </div>
+
+            <div class="metric-card purple">
+                <div class="metric-header">
+                    <span class="metric-title">SNS 언급량</span>
+                    <span class="metric-icon">📱</span>
+                </div>
+                <div class="metric-value" id="snsMentions">2,847</div>
+                <div class="metric-change positive">
+                    <span>🔥</span>
+                    <span>+45.2% 전일 대비</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">충전소 이용률</span>
+                    <span class="metric-icon">🔋</span>
+                </div>
+                <div class="metric-value" id="chargingRate">84%</div>
+                <div class="metric-change negative">
+                    <span>⚡</span>
+                    <span>높은 이용률</span>
+                </div>
+            </div>
+
             <div class="metric-card">
                 <div class="metric-header">
                     <span class="metric-title">AI 예측 정확도</span>
                     <span class="metric-icon">🎯</span>
                 </div>
-                <div class="metric-value" id="accuracy">95.7%</div>
+                <div class="metric-value" id="accuracy">96.2%</div>
                 <div class="metric-change positive">
                     <span>🚀</span>
                     <span>지속 학습 중</span>
                 </div>
             </div>
+        </section>
 
-            <div class="metric-card danger">
-                <div class="metric-header">
-                    <span class="metric-title">혼잡도 경고</span>
-                    <span class="metric-icon">⚠️</span>
+        <!-- 교통/주차 현황 -->
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-icon">🚗</span>
+                <h2 class="section-title">실시간 교통/주차 현황</h2>
+            </div>
+            <div class="traffic-grid">
+                <div class="traffic-item">
+                    <div class="traffic-name">롯데월드 주차장</div>
+                    <div class="traffic-status" style="color: var(--danger-color);">혼잡</div>
+                    <div class="traffic-detail">234/280대 (84%)</div>
                 </div>
-                <div class="metric-value" id="congestionLevel">높음</div>
-                <div class="metric-change negative">
-                    <span>🔴</span>
-                    <span>롯데월드 주변</span>
+                <div class="traffic-item">
+                    <div class="traffic-name">석촌호수 공영</div>
+                    <div class="traffic-status" style="color: var(--success-color);">여유</div>
+                    <div class="traffic-detail">45/120대 (38%)</div>
+                </div>
+                <div class="traffic-item">
+                    <div class="traffic-name">송파구청 주차장</div>
+                    <div class="traffic-status" style="color: var(--warning-color);">보통</div>
+                    <div class="traffic-detail">78/110대 (71%)</div>
+                </div>
+                <div class="traffic-item">
+                    <div class="traffic-name">잠실역 환승주차장</div>
+                    <div class="traffic-status" style="color: var(--danger-color);">만차</div>
+                    <div class="traffic-detail">450/450대 (100%)</div>
+                </div>
+                <div class="traffic-item">
+                    <div class="traffic-name">올림픽공원 주차장</div>
+                    <div class="traffic-status" style="color: var(--success-color);">여유</div>
+                    <div class="traffic-detail">156/380대 (41%)</div>
+                </div>
+                <div class="traffic-item">
+                    <div class="traffic-name">충전소 (급속)</div>
+                    <div class="traffic-status" style="color: var(--warning-color);">대기</div>
+                    <div class="traffic-detail">12/15대 (80%)</div>
                 </div>
             </div>
-        </section>
+        </div>
+
+        <!-- SNS 트렌드 분석 -->
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-icon">📊</span>
+                <h2 class="section-title">실시간 SNS 트렌드 분석</h2>
+            </div>
+            <div class="sns-trends">
+                <div class="sns-item">
+                    <div class="sns-platform">
+                        <div class="sns-icon instagram"></div>
+                        <strong>Instagram</strong>
+                    </div>
+                    <div class="sns-metric">
+                        <span>게시물</span>
+                        <span id="instaPosts">1,247개</span>
+                    </div>
+                    <div class="sns-metric">
+                        <span>좋아요</span>
+                        <span id="instaLikes">45,692개</span>
+                    </div>
+                    <div class="trending-keywords">
+                        <span class="keyword-tag">#롯데월드</span>
+                        <span class="keyword-tag">#석촌호수</span>
+                        <span class="keyword-tag">#송파구축제</span>
+                    </div>
+                </div>
+
+                <div class="sns-item">
+                    <div class="sns-platform">
+                        <div class="sns-icon youtube"></div>
+                        <strong>YouTube</strong>
+                    </div>
+                    <div class="sns-metric">
+                        <span>영상</span>
+                        <span id="youtubePosts">89개</span>
+                    </div>
+                    <div class="sns-metric">
+                        <span>조회수</span>
+                        <span id="youtubeViews">234,567회</span>
+                    </div>
+                    <div class="trending-keywords">
+                        <span class="keyword-tag">#송파여행</span>
+                        <span class="keyword-tag">#롯데타워</span>
+                        <span class="keyword-tag">#먹방</span>
+                    </div>
+                </div>
+
+                <div class="sns-item">
+                    <div class="sns-platform">
+                        <div class="sns-icon twitter"></div>
+                        <strong>Twitter X</strong>
+                    </div>
+                    <div class="sns-metric">
+                        <span>트윗</span>
+                        <span id="twitterPosts">1,511개</span>
+                    </div>
+                    <div class="sns-metric">
+                        <span>리트윗</span>
+                        <span id="twitterRetweets">8,934개</span>
+                    </div>
+                    <div class="trending-keywords">
+                        <span class="keyword-tag">#송파구</span>
+                        <span class="keyword-tag">#교통정보</span>
+                        <span class="keyword-tag">#날씨</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- 차트 섹션 -->
         <section class="charts-section">
             <div class="chart-card">
                 <div class="chart-header">
                     <div>
-                        <h3 class="chart-title">시간대별 유동인구</h3>
-                        <p class="chart-subtitle">통신사 기지국 데이터 기반</p>
+                        <h3 class="chart-title">시간대별 유동인구 & 이동패턴</h3>
+                        <p class="chart-subtitle">SKT 통신사 기지국 데이터</p>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -497,121 +675,152 @@
             <div class="chart-card">
                 <div class="chart-header">
                     <div>
-                        <h3 class="chart-title">카드매출 트렌드</h3>
+                        <h3 class="chart-title">카드매출 & 소비패턴</h3>
                         <p class="chart-subtitle">KB금융 POS 데이터</p>
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="salesTrendChart"></canvas>
+                    <canvas id="salesPatternChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
                 <div class="chart-header">
                     <div>
-                        <h3 class="chart-title">연령대별 방문 패턴</h3>
-                        <p class="chart-subtitle">통신사 가입자 정보</p>
+                        <h3 class="chart-title">주차장 이용률 추이</h3>
+                        <p class="chart-subtitle">공영·민영 주차장 실시간</p>
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="agePatternChart"></canvas>
+                    <canvas id="parkingTrendChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
                 <div class="chart-header">
                     <div>
-                        <h3 class="chart-title">날씨-방문객 상관분석</h3>
-                        <p class="chart-subtitle">기상청 실시간 데이터</p>
+                        <h3 class="chart-title">충전소 이용 현황</h3>
+                        <p class="chart-subtitle">전기차 충전소 타입별</p>
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="weatherCorrelationChart"></canvas>
+                    <canvas id="chargingStationChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">SNS 감성분석</h3>
+                        <p class="chart-subtitle">송파구 관련 게시물 분석</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">날씨-활동 상관분석</h3>
+                        <p class="chart-subtitle">기상청 + 유동인구 데이터</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="weatherActivityChart"></canvas>
                 </div>
             </div>
         </section>
 
-        <!-- 분석 패널 -->
-        <section class="analysis-panel">
-            <div class="prediction-section">
-                <h2 class="section-title">🔮 AI 예측 분석</h2>
-                <div class="chart-container">
-                    <canvas id="predictionChart"></canvas>
-                </div>
-                
-                <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">실시간 예측 데이터</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>시간대</th>
-                            <th>예측 인구</th>
-                            <th>예상 매출</th>
-                            <th>혼잡도</th>
-                        </tr>
-                    </thead>
-                    <tbody id="predictionTableBody">
-                        <!-- 동적으로 생성됨 -->
-                    </tbody>
-                </table>
+        <!-- AI 예측 & 분석 -->
+        <section class="section-container">
+            <div class="section-header">
+                <span class="section-icon">🔮</span>
+                <h2 class="section-title">AI 예측 분석 & 인사이트</h2>
             </div>
-
-            <div class="side-panel">
-                <!-- 날씨 정보 -->
-                <div class="info-card weather">
-                    <h3 class="section-title">🌤️ 실시간 기상정보</h3>
-                    <div class="weather-item">
-                        <span>현재 기온</span>
-                        <span id="currentTemp">24°C</span>
+            
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                <div class="chart-card">
+                    <h3 style="margin-bottom: 1rem;">📈 통합 예측 모델</h3>
+                    <div class="chart-container">
+                        <canvas id="predictionChart"></canvas>
                     </div>
-                    <div class="weather-item">
-                        <span>습도</span>
-                        <span id="humidity">52%</span>
-                    </div>
-                    <div class="weather-item">
-                        <span>강수확률</span>
-                        <span id="rainChance">15%</span>
-                    </div>
-                    <div class="weather-item">
-                        <span>미세먼지</span>
-                        <span id="fineDust">보통</span>
-                    </div>
+                    
+                    <h4 style="margin: 1.5rem 0 1rem 0;">실시간 예측 데이터</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>시간대</th>
+                                <th>예측 인구</th>
+                                <th>예상 매출</th>
+                                <th>주차 혼잡도</th>
+                                <th>SNS 활동</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predictionTableBody">
+                            <!-- 동적으로 생성됨 -->
+                        </tbody>
+                    </table>
                 </div>
 
-                <!-- 행사 일정 -->
-                <div class="info-card events">
-                    <h3 class="section-title">🎭 주요 행사 일정</h3>
-                    <div class="event-item">
-                        <div class="event-date">2025.08.20 - 08.22</div>
-                        <div class="event-title">잠실 한강공원 여름축제</div>
-                        <div class="event-impact">예상 방문객 증가: +35%</div>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- 날씨 정보 -->
+                    <div class="chart-card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white;">
+                        <h3 style="margin-bottom: 1rem;">🌤️ 실시간 기상정보</h3>
+                        <div style="display: grid; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>현재 기온</span>
+                                <span id="currentTemp">24°C</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>습도</span>
+                                <span id="humidity">52%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>강수량</span>
+                                <span id="rainfall">0mm</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>미세먼지</span>
+                                <span id="fineDust">보통</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="event-item">
-                        <div class="event-date">2025.08.25</div>
-                        <div class="event-title">롯데타워 콘서트</div>
-                        <div class="event-impact">예상 방문객 증가: +60%</div>
-                    </div>
-                    <div class="event-item">
-                        <div class="event-date">2025.08.28</div>
-                        <div class="event-title">석촌호수 야간축제</div>
-                        <div class="event-impact">예상 방문객 증가: +25%</div>
-                    </div>
-                </div>
 
-                <!-- AI 인사이트 -->
-                <div class="info-card">
-                    <h3 class="section-title">🤖 AI 인사이트</h3>
-                    <div style="space-y: 1rem;">
-                        <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem;">
-                            <strong style="color: var(--primary-color);">🔥 급증 예상</strong><br>
-                            <small style="color: #6b7280;">내일 오후 2-4시, 롯데월드 주변 유동인구 +40% 예상</small>
+                    <!-- 행사 일정 -->
+                    <div class="chart-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                        <h3 style="margin-bottom: 1rem;">🎭 주요 행사 일정</h3>
+                        <div style="display: grid; gap: 1rem;">
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">2025.08.20 - 08.22</div>
+                                <div style="font-weight: 600;">잠실 한강공원 여름축제</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">예상 방문객: +35%</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">2025.08.25</div>
+                                <div style="font-weight: 600;">롯데타워 콘서트</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">예상 방문객: +60%</div>
+                            </div>
                         </div>
-                        <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem;">
-                            <strong style="color: var(--success-color);">💰 매출 피크</strong><br>
-                            <small style="color: #6b7280;">주말 저녁 7-9시, 카드매출 최고치 예상</small>
-                        </div>
-                        <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px;">
-                            <strong style="color: var(--warning-color);">⚠️ 혼잡 주의</strong><br>
-                            <small style="color: #6b7280;">8/22 축제일, 지하철 2호선 혼잡 예상</small>
+                    </div>
+
+                    <!-- AI 인사이트 -->
+                    <div class="chart-card">
+                        <h3 style="margin-bottom: 1rem;">🤖 AI 실시간 인사이트</h3>
+                        <div style="display: grid; gap: 0.75rem;">
+                            <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px;">
+                                <strong style="color: var(--danger-color);">🚨 급증 경고</strong><br>
+                                <small>롯데월드 주변 유동인구 +65% 급증</small>
+                            </div>
+                            <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px;">
+                                <strong style="color: var(--success-color);">💰 매출 호조</strong><br>
+                                <small>카페/음식점 매출 전일 대비 +28%</small>
+                            </div>
+                            <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px;">
+                                <strong style="color: var(--info-color);">📱 SNS 트렌드</strong><br>
+                                <small>#송파구축제 해시태그 급상승</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -625,32 +834,52 @@
 
         // 실시간 데이터 업데이트
         function updateRealTimeMetrics() {
-            // 현재 유동인구 (25000-30000)
+            // 현재 유동인구
             const population = Math.floor(Math.random() * 5000) + 25000;
             document.getElementById('currentPopulation').textContent = population.toLocaleString();
 
-            // 카드매출 (1.5-2.5억)
+            // 카드매출
             const sales = (Math.random() * 1 + 1.5).toFixed(1);
             document.getElementById('cardSales').textContent = `₩${sales}억`;
 
-            // AI 정확도 (95-97%)
+            // 주차 가용률
+            const parkingRate = Math.floor(Math.random() * 40) + 50;
+            document.getElementById('parkingRate').textContent = `${parkingRate}%`;
+
+            // SNS 언급량
+            const mentions = Math.floor(Math.random() * 500) + 2500;
+            document.getElementById('snsMentions').textContent = mentions.toLocaleString();
+
+            // 충전소 이용률
+            const chargingRate = Math.floor(Math.random() * 20) + 75;
+            document.getElementById('chargingRate').textContent = `${chargingRate}%`;
+
+            // AI 정확도
             const accuracy = (Math.random() * 2 + 95).toFixed(1);
             document.getElementById('accuracy').textContent = `${accuracy}%`;
 
-            // 기온 (20-28도)
+            // 기상 정보
             const temp = Math.floor(Math.random() * 8) + 20;
             document.getElementById('currentTemp').textContent = `${temp}°C`;
+            
+            const humidity = Math.floor(Math.random() * 30) + 40;
+            document.getElementById('humidity').textContent = `${humidity}%`;
+
+            // SNS 데이터
+            document.getElementById('instaPosts').textContent = `${Math.floor(Math.random() * 500 + 1000).toLocaleString()}개`;
+            document.getElementById('instaLikes').textContent = `${Math.floor(Math.random() * 20000 + 35000).toLocaleString()}개`;
+            document.getElementById('youtubePosts').textContent = `${Math.floor(Math.random() * 50 + 60)}개`;
+            document.getElementById('youtubeViews').textContent = `${Math.floor(Math.random() * 100000 + 200000).toLocaleString()}회`;
+            document.getElementById('twitterPosts').textContent = `${Math.floor(Math.random() * 800 + 1200).toLocaleString()}개`;
+            document.getElementById('twitterRetweets').textContent = `${Math.floor(Math.random() * 3000 + 7000).toLocaleString()}개`;
         }
 
         // 시간대별 유동인구 차트
         function createHourlyPopulationChart() {
             const ctx = document.getElementById('hourlyPopulationChart').getContext('2d');
             const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
-            const data = [
-                800, 500, 300, 200, 300, 1200, 2000, 2800, 2400, 2000,
-                2200, 2800, 3200, 3000, 2600, 2400, 2200, 3000, 3800, 3400,
-                3000, 2400, 1600, 1000
-            ];
+            const populationData = [800, 500, 300, 200, 300, 1200, 2000, 2800, 2400, 2000, 2200, 2800, 3200, 3000, 2600, 2400, 2200, 3000, 3800, 3400, 3000, 2400, 1600, 1000];
+            const movementData = [100, 50, 30, 20, 30, 200, 350, 450, 380, 320, 340, 420, 480, 460, 400, 380, 360, 480, 580, 520, 460, 380, 280, 180];
 
             charts.hourlyPopulation = new Chart(ctx, {
                 type: 'line',
@@ -658,140 +887,241 @@
                     labels: hours,
                     datasets: [{
                         label: '유동인구',
-                        data: data,
+                        data: populationData,
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         tension: 0.4,
                         fill: true,
-                        pointRadius: 3,
-                        pointHoverRadius: 6
+                        yAxisID: 'y'
+                    }, {
+                        label: '이동인구',
+                        data: movementData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString() + '명';
-                                }
-                            }
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '유동인구 (명)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: '이동인구 (명)' },
+                            grid: { drawOnChartArea: false }
                         }
                     }
                 }
             });
         }
 
-        // 매출 트렌드 차트
-        function createSalesTrendChart() {
-            const ctx = document.getElementById('salesTrendChart').getContext('2d');
-            const days = ['월', '화', '수', '목', '금', '토', '일'];
-            const salesData = [1.2, 1.1, 1.3, 1.4, 1.8, 2.5, 2.2];
+        // 매출 패턴 차트
+        function createSalesPatternChart() {
+            const ctx = document.getElementById('salesPatternChart').getContext('2d');
+            const categories = ['음식점', '카페', '쇼핑', '엔터테인먼트', '교통', '기타'];
+            const morningData = [20, 35, 10, 5, 25, 5];
+            const afternoonData = [35, 25, 30, 20, 15, 10];
+            const eveningData = [45, 15, 25, 35, 10, 15];
 
-            charts.salesTrend = new Chart(ctx, {
+            charts.salesPattern = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: days,
+                    labels: categories,
                     datasets: [{
-                        label: '일별 매출',
-                        data: salesData,
-                        backgroundColor: '#10b981',
-                        borderRadius: 4
+                        label: '오전 (06-12시)',
+                        data: morningData,
+                        backgroundColor: '#f59e0b'
+                    }, {
+                        label: '오후 (12-18시)',
+                        data: afternoonData,
+                        backgroundColor: '#3b82f6'
+                    }, {
+                        label: '저녁 (18-24시)',
+                        data: eveningData,
+                        backgroundColor: '#10b981'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '₩' + value + '억';
-                                }
-                            }
+                            title: { display: true, text: '매출 비중 (%)' }
                         }
                     }
                 }
             });
         }
 
-        // 연령대별 패턴 차트
-        function createAgePatternChart() {
-            const ctx = document.getElementById('agePatternChart').getContext('2d');
-            const ageGroups = ['10대', '20대', '30대', '40대', '50대', '60대+'];
-            const visitData = [12, 28, 24, 18, 12, 6];
+        // 주차장 이용률 차트
+        function createParkingTrendChart() {
+            const ctx = document.getElementById('parkingTrendChart').getContext('2d');
+            const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
+            const publicData = [20, 15, 10, 8, 12, 25, 45, 65, 70, 75, 80, 85, 90, 88, 85, 82, 78, 85, 92, 88, 75, 60, 45, 30];
+            const privateData = [30, 25, 15, 10, 15, 35, 55, 75, 80, 85, 90, 95, 98, 95, 92, 88, 85, 92, 98, 95, 85, 70, 55, 40];
 
-            charts.agePattern = new Chart(ctx, {
-                type: 'doughnut',
+            charts.parkingTrend = new Chart(ctx, {
+                type: 'line',
                 data: {
-                    labels: ageGroups,
+                    labels: hours,
                     datasets: [{
-                        data: visitData,
-                        backgroundColor: [
-                            '#ef4444', '#f59e0b', '#10b981', 
-                            '#3b82f6', '#8b5cf6', '#ec4899'
-                        ]
+                        label: '공영주차장',
+                        data: publicData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: '민영주차장',
+                        data: privateData,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                usePointStyle: true
-                            }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: '이용률 (%)' }
                         }
                     }
                 }
             });
         }
 
-        // 날씨 상관분석 차트
-        function createWeatherCorrelationChart() {
-            const ctx = document.getElementById('weatherCorrelationChart').getContext('2d');
+        // 충전소 현황 차트
+        function createChargingStationChart() {
+            const ctx = document.getElementById('chargingStationChart').getContext('2d');
+            const types = ['급속충전', '완속충전', '초급속충전'];
+            const availableData = [12, 45, 8];
+            const usedData = [28, 15, 17];
+
+            charts.chargingStation = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: types,
+                    datasets: [{
+                        label: '이용 중',
+                        data: usedData,
+                        backgroundColor: '#ef4444'
+                    }, {
+                        label: '이용 가능',
+                        data: availableData,
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            title: { display: true, text: '충전기 수 (대)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // SNS 감성분석 차트
+        function createSentimentChart() {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            const platforms = ['Instagram', 'YouTube', 'Twitter X'];
+            const positiveData = [75, 68, 45];
+            const neutralData = [20, 25, 35];
+            const negativeData = [5, 7, 20];
+
+            charts.sentiment = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: platforms,
+                    datasets: [{
+                        label: '긍정',
+                        data: positiveData,
+                        backgroundColor: '#10b981'
+                    }, {
+                        label: '중립',
+                        data: neutralData,
+                        backgroundColor: '#6b7280'
+                    }, {
+                        label: '부정',
+                        data: negativeData,
+                        backgroundColor: '#ef4444'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            max: 100,
+                            title: { display: true, text: '감성 비율 (%)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 날씨-활동 상관분석 차트
+        function createWeatherActivityChart() {
+            const ctx = document.getElementById('weatherActivityChart').getContext('2d');
             const temperatures = [15, 18, 22, 25, 28, 32, 35];
             const visitors = [1200, 1600, 2200, 2800, 3200, 2500, 1800];
+            const snsPosts = [80, 120, 180, 250, 300, 200, 120];
 
-            charts.weatherCorrelation = new Chart(ctx, {
+            charts.weatherActivity = new Chart(ctx, {
                 type: 'scatter',
                 data: {
                     datasets: [{
-                        label: '온도별 방문객',
+                        label: '방문객 수',
                         data: temperatures.map((temp, i) => ({x: temp, y: visitors[i]})),
                         backgroundColor: '#3b82f6',
                         borderColor: '#3b82f6',
-                        pointRadius: 6
+                        yAxisID: 'y'
+                    }, {
+                        label: 'SNS 게시물',
+                        data: temperatures.map((temp, i) => ({x: temp, y: snsPosts[i]})),
+                        backgroundColor: '#8b5cf6',
+                        borderColor: '#8b5cf6',
+                        yAxisID: 'y1'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: '기온 (°C)'
-                            }
+                        x: { title: { display: true, text: '기온 (°C)' } },
+                        y: { 
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '방문객 수' }
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: '방문객 수 (명)'
-                            }
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'SNS 게시물 수' },
+                            grid: { drawOnChartArea: false }
                         }
                     }
                 }
@@ -804,32 +1134,52 @@
             const hours = Array.from({length: 12}, (_, i) => `${i + 12}:00`);
             const actualData = [2800, 3000, 2600, 2400, 2200, 3000, 3800, 3400, 3000, 2400, 1600, 1000];
             const predictedData = [2900, 3200, 2750, 2500, 2300, 3200, 4000, 3600, 3200, 2500, 1700, 1050];
+            const salesPrediction = [180, 195, 170, 155, 145, 190, 240, 220, 200, 160, 110, 75];
 
             charts.prediction = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: hours,
                     datasets: [{
-                        label: '실제',
+                        label: '실제 인구',
                         data: actualData,
                         borderColor: '#6b7280',
                         backgroundColor: 'rgba(107, 114, 128, 0.1)',
-                        tension: 0.4
+                        tension: 0.4,
+                        yAxisID: 'y'
                     }, {
-                        label: 'AI 예측',
+                        label: 'AI 예측 인구',
                         data: predictedData,
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         tension: 0.4,
-                        borderWidth: 3
+                        borderWidth: 3,
+                        yAxisID: 'y'
+                    }, {
+                        label: '예측 매출',
+                        data: salesPrediction,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y1'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top'
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '인구 (명)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: '매출 (만원)' },
+                            grid: { drawOnChartArea: false }
                         }
                     }
                 }
@@ -846,6 +1196,7 @@
                 const hour = (currentHour + i) % 24;
                 const population = Math.floor(Math.random() * 2000) + 2000;
                 const sales = (Math.random() * 0.5 + 0.8).toFixed(1);
+                const snsActivity = Math.floor(Math.random() * 200) + 100;
                 
                 let congestionLevel, statusClass;
                 if (population > 3000) {
@@ -859,15 +1210,33 @@
                     statusClass = 'low';
                 }
 
+                let snsLevel, snsClass;
+                if (snsActivity > 200) {
+                    snsLevel = '활발';
+                    snsClass = 'high';
+                } else if (snsActivity > 120) {
+                    snsLevel = '보통';
+                    snsClass = 'medium';
+                } else {
+                    snsLevel = '낮음';
+                    snsClass = 'low';
+                }
+
                 html += `
                     <tr>
-                        <td>${hour}:00 - ${hour + 1}:00</td>
+                        <td>${hour}:00-${hour + 1}:00</td>
                         <td>${population.toLocaleString()}명</td>
                         <td>₩${sales}억</td>
                         <td>
                             <span class="status-indicator ${statusClass}">
                                 <span class="status-dot"></span>
                                 ${congestionLevel}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-indicator ${snsClass}">
+                                <span class="status-dot"></span>
+                                ${snsLevel}
                             </span>
                         </td>
                     </tr>
@@ -881,9 +1250,11 @@
         function initializeDashboard() {
             // 차트 생성
             createHourlyPopulationChart();
-            createSalesTrendChart();
-            createAgePatternChart();
-            createWeatherCorrelationChart();
+            createSalesPatternChart();
+            createParkingTrendChart();
+            createChargingStationChart();
+            createSentimentChart();
+            createWeatherActivityChart();
             createPredictionChart();
 
             // 테이블 초기화
@@ -891,8 +1262,8 @@
 
             // 실시간 업데이트 시작
             updateRealTimeMetrics();
-            setInterval(updateRealTimeMetrics, 3000); // 3초마다
-            setInterval(updatePredictionTable, 10000); // 10초마다
+            setInterval(updateRealTimeMetrics, 5000); // 5초마다
+            setInterval(updatePredictionTable, 15000); // 15초마다
 
             console.log('🚀 송파구 스마트AI 초기화 완료!');
         }
